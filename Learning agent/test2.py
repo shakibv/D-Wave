@@ -16,9 +16,8 @@ from collections import deque
 from itertools import groupby
 from scipy.cluster.hierarchy import fclusterdata
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
 
-from graphs import assign_edges, assign_biases, fully_connected
+from graphs import assign_edges, assign_biases, draw_chimera, fully_connected
 
 
 def create_data():
@@ -76,19 +75,20 @@ def score_graph(graph):
     inner_rim = ((1, 6), (2, 6), (2, 5), (1, 5))
 
     if all(graph.get(edge, 0.0) == 1.0 for edge in outer_rim):
-        score += 10
+        score += 10 + np.random.random() - 0.5
 
     if all(graph.get(edge, 0.0) == 1.0 for edge in inner_rim):
-        score += 10
+        score += 10 + np.random.random() - 0.5
 
     for n1 in range(0, 8):
         edges = 0
 
         for n2 in range(0, 8):
-            edges += graph.get((n1, n2), 0.0)
+            if n1 != n2:
+                edges += graph.get((n1, n2), 0.0)
 
         if edges == 3.0:
-            score += 5
+            score += 5 + np.random.random() - 0.5
 
     return score
 
@@ -98,6 +98,11 @@ def load_data():
     with open('./test_data/test2.dat', 'rb') as file:
         graphs, scores = pickle.load(file)
 
+    return graphs, scores
+
+
+def format_graphs(graphs):
+    """Formats the D-Wave inputs into a 1-D vector."""
     matrices = deque()
     for graph in graphs:
         matrix = np.zeros(shape=(8, 8))
@@ -107,7 +112,7 @@ def load_data():
 
         matrices.append(matrix.flatten())
 
-    return matrices, scores
+    return matrices
 
 
 def train_clustering():
@@ -131,15 +136,39 @@ def train_gan():
 
 
 def main():
-    # graphs, scores = create_data()
+    graphs, scores = create_data()
     graphs, scores = load_data()
+    matrices = format_graphs(graphs)
     x = np.array([
-        np.append(graph, [score]) for graph, score in zip(graphs, scores)
+        np.append(matrix, [score]) for matrix, score in zip(matrices, scores)
     ])
 
     # Show groups of scores
     # plt.hist(scores)
     # plt.show()
+
+    # Using k-means from scikit-learn with euclidean distance
+    model = KMeans(n_clusters=12)
+    model.fit(x)
+    y = model.predict(x)
+
+    zipper = sorted(zip(x, y, graphs, scores), key=lambda x: x[1])
+    x, y, graphs, scores = list(zip(*zipper))
+    x = np.array(x)
+    indx = 0
+    for component, components in groupby(y):
+        components = len(list(components))
+        plt.plot(
+            sorted(x[indx:indx+components, -1]),
+            label='{}'.format(component)
+        )
+        for i in range(5):
+            print(scores[indx+i])
+            draw_chimera(graphs[indx+i])
+        indx += components
+
+    plt.legend(loc='best')
+    plt.show()
 
     # Using agglomerative clustering from scipy (doesn't converge)
     # fcluster = fclusterdata(
@@ -149,30 +178,6 @@ def main():
     # )
     # plt.hist(fcluster)
     # plt.show()
-
-    # Using k-means from scikit-learn with euclidean distance
-    model = KMeans(
-        n_clusters=10,
-    )
-    model.fit(x)
-    y = model.predict(x)
-
-    zipper = sorted(zip(x, y), key=lambda x: x[-1])
-    x, y = list(zip(*zipper))
-    x = np.array(x)
-    indx = 0
-    for component, components in groupby(y):
-        components = len(list(components))
-        plt.plot(
-            sorted(x[indx:indx+components, -1]),
-            label='{}'.format(component)
-        )
-        indx += components
-
-    plt.legend(loc='best')
-    plt.show()
-
-
 
 
 if __name__ == '__main__':
