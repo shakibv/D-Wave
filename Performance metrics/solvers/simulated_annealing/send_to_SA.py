@@ -154,5 +154,5 @@ def write_batch(directory, instance, solver, solver_params):
             f.write(param+" ")
     f.close()
     
-send_to_SA_solver("E:\Physics 598\Run_SA","instance","an_ms_r1_nf",{"-s":200,"-r":1000}, save="output",verbose=True)
-send_to_SA_solver("D:\Physics 598\Run_SA","503_pm_nf_0000","an_ms_r1_nf",{"-s":200,"-r":1000,"-t":4}, save="output",verbose=True)
+send_to_SA_solver("Current\Directory","instance","an_ms_r1_nf",{"-s":200,"-r":1000}, save="output",verbose=True)
+send_to_SA_solver("Current\Directory","503_pm_nf_0000","an_ms_r1_nf",{"-s":200,"-r":1000,"-t":4}, save="output",verbose=True)
