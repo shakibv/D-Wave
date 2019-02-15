@@ -1,0 +1,75 @@
+================================================================================
+Simulated Annealing Solver
+
+--------------------------------------------------------------------------------
+Available Solvers:
+--------------------------------------------------------------------------------
+
+The list of available solvers is given below. Provide the name of the solver as
+a string to the %%NAMEFUNCTION%% to use it.
+
+%%EXAMPLE%%
+
+Solver Name:          Solver Description:
+
+an_ms_r1_nf           Multi-spin code for range-1 interactions without magnetic
+                      field (approach one)
+
+an_ms_r1_fi           Multi-spin code for range-1 interactions with magnetic
+                      field (approach one)
+
+an_ms_r3_nf           Multi-spin code for range-3 interactions without magnetic
+                      field (approach one)
+
+an_ms_r1_nf_v0        Multi-spin code for range-1 interactions without magnetic
+                      field (approach two)
+
+an_ss_ge_fi           Single-spin code for general interactions with magnetic
+                      field (fixed number of neighbors)
+
+an_ss_ge_fi_vdeg      Single-spin code for general interactions with magnetic
+                      field (any number of neighbors)
+
+an_ss_ge_nf_bp        Single-spin code for general interactions on bipartite
+                      lattices without magnetic field (fixed number of neighbors)
+
+an_ss_ge_nf_bp_vdeg   Single-spin code for general interactions on bipartite
+                      lattices without magnetic field (any number of neighbors)
+
+an_ss_rn_fi           Single-spin code for range-n interactions with magnetic
+                      field (fixed number of neighbors)
+
+an_ss_rn_fi_vdeg      Single-spin code for range-n interactions with magnetic
+                      field (any number of neighbors)
+
+--------------------------------------------------------------------------------
+Solver Parameters:
+--------------------------------------------------------------------------------
+
+The solver parameters are passed as a dictionary to %%FUNCTIONNAME%%. Each of
+the parameters can be passed as a key with values as described below.
+
+Key:                  Value:
+
+-s                    a positive integer representing the number of sweeps %%DefineSweep%
+
+-r                    a positive integer representing the number of repetitions
+
+-b0                   [beta0] is initial inverse temperature. Default value: 0.1
+
+-b1                   [beta1] is final inverse temperature. Default value: 3.0
+
+-r0                   [rep0] is starting repetition. Default value: 0
+
+-v                    if -v is set, timing and some other info is printed.
+                      Default value: not set
+
+-g                    if -g is set, only the lowest energy solution is printed.
+                      Default value: not set
+
+-sched                specifies a schedule. It can either be lin, exp or be a
+                      text file on the system which contains an inverse
+                      temperature on every line. Default value: lin
+
+-t                    is the number of threads to run in parallel. Default
+                      value: OMP NUM THREADS
