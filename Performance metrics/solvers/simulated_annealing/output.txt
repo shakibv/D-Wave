@@ -1,0 +1,194 @@
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+      -360      3857       0.0602656    instance.txt
+      -356     12554        0.196156    instance.txt
+      -352     22059        0.344672    instance.txt
+      -348     20206        0.315719    instance.txt
+      -344      4984        0.077875    instance.txt
+      -340       337      0.00526563    instance.txt
+      -336         3     4.6875e-005    instance.txt
+
+
+Solution for Problem Instance: instance
+
+    Energy:  Frequency: Success Rate:   Instance Name:
+      -360      3857       0.0602656    instance.txt
+      -356     12554        0.196156    instance.txt
+      -352     22059        0.344672    instance.txt
+      -348     20206        0.315719    instance.txt
+      -344      4984        0.077875    instance.txt
+      -340       337      0.00526563    instance.txt
+      -336         3     4.6875e-005    instance.txt
+
+
