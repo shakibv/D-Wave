@@ -1,0 +1,3 @@
+Current Solvers:
+
+  Simulated Annealing
