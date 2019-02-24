@@ -5,6 +5,8 @@
    that this is not perfect since it does not take into account possible
    interactions that are not through direct connections.
 4. From the clustering, use a GAN to generate new samples in the cluster.
+
+
 """
 
 
@@ -14,8 +16,8 @@ import pickle
 
 from collections import deque
 from itertools import groupby
-from scipy.cluster.hierarchy import fclusterdata
-from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
+from sklearn.cluster.bicluster import SpectralBiclustering, SpectralCoclustering
 
 from graphs import assign_edges, assign_biases, draw_chimera, fully_connected
 
@@ -115,10 +117,6 @@ def format_graphs(graphs):
     return matrices
 
 
-def train_clustering():
-    pass
-
-
 def hamming_distance(x, y):
     """The Hamming distance between two equal-length vectors."""
     return sum(e1 != e2 for e1, e2 in zip(x, y))
@@ -131,26 +129,10 @@ def cosine_similarity(x, y):
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 
-def train_gan():
-    pass
-
-
-def main():
-    graphs, scores = create_data()
-    graphs, scores = load_data()
-    matrices = format_graphs(graphs)
-    x = np.array([
-        np.append(matrix, [score]) for matrix, score in zip(matrices, scores)
-    ])
-
-    # Show groups of scores
-    # plt.hist(scores)
-    # plt.show()
-
+def train_clustering(cluster, kwargs, x, graphs, scores):
     # Using k-means from scikit-learn with euclidean distance
-    model = KMeans(n_clusters=12)
-    model.fit(x)
-    y = model.predict(x)
+    model = cluster(**kwargs)
+    y = model.fit_predict(x)
 
     zipper = sorted(zip(x, y, graphs, scores), key=lambda x: x[1])
     x, y, graphs, scores = list(zip(*zipper))
@@ -159,25 +141,40 @@ def main():
     for component, components in groupby(y):
         components = len(list(components))
         plt.plot(
-            sorted(x[indx:indx+components, -1]),
+            sorted(scores[indx:indx+components]),
             label='{}'.format(component)
         )
-        for i in range(5):
-            print(scores[indx+i])
-            draw_chimera(graphs[indx+i])
+        # for i in range(5):
+        #     print(scores[indx+i])
+        #     draw_chimera(graphs[indx+i])
         indx += components
 
     plt.legend(loc='best')
     plt.show()
 
-    # Using agglomerative clustering from scipy (doesn't converge)
-    # fcluster = fclusterdata(
-    #     X=x,
-    #     t=10,
-    #     metric=cosine_similarity,
-    # )
-    # plt.hist(fcluster)
+
+def train_gan():
+    pass
+
+
+def main():
+    # graphs, scores = create_data()
+    graphs, scores = load_data()
+    matrices = format_graphs(graphs)
+    x = np.array([np.append(matrix, [score]) for matrix, score in zip(matrices, scores)])
+    # x = np.array(matrices)
+
+    # Show groups of scores
+    # plt.hist(scores)
     # plt.show()
+
+    train_clustering(
+        cluster=KMeans,
+        kwargs={'n_clusters': 12},
+        x=x,
+        graphs=graphs,
+        scores=scores,
+    )
 
 
 if __name__ == '__main__':
