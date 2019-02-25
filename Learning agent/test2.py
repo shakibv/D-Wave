@@ -15,7 +15,6 @@ import sys
 
 from collections import deque
 from itertools import groupby
-from keras.datasets import mnist
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout
 from keras.layers import BatchNormalization, Activation, ZeroPadding2D
 from keras.layers.advanced_activations import LeakyReLU
@@ -44,7 +43,7 @@ class GAN:
         self.n_latent = n_latent
 
         self.optimizer = optimizer
-        self.loss_function = loss_entropy
+        self.loss_function = loss_function
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
@@ -58,7 +57,7 @@ class GAN:
         self.generator = self.build_generator()
 
         # The generator takes noise as input and generates matrices
-        z = Input(shape=(self.latent_dim,))
+        z = Input(shape=(self.n_latent,))
         matrix = self.generator(z)
 
         # For the combined model we will only train the generator
@@ -95,8 +94,8 @@ class GAN:
         model.add(Dense(1024))
         model.add(LeakyReLU(alpha=0.2))
         model.add(BatchNormalization(momentum=0.8))
-        model.add(Dense(np.prod(self.img_shape), activation='tanh'))
-        model.add(Reshape(self.img_shape))
+        model.add(Dense(np.prod(self.shape), activation='tanh'))
+        model.add(Reshape(self.shape))
         model.summary()
 
         outputs = model(inputs)
@@ -126,10 +125,7 @@ class GAN:
 
         return Model(inputs, outputs)
 
-    def train(self, epochs, batch_size=128, sample_interval=50):
-        # Load the dataset
-        x_train = load_data()
-
+    def train(self, x_train, epochs, batch_size=128, sample_interval=50):
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))
         fake = np.zeros((batch_size, 1))
@@ -142,7 +138,7 @@ class GAN:
 
             # Select a random batch of matrices
             indices = np.random.randint(0, x_train.shape[0], batch_size)
-            matrices = x_train[idx]
+            matrices = x_train[indices]
 
             noise = np.random.normal(0, 1, (batch_size, self.n_latent))
 
@@ -167,7 +163,7 @@ class GAN:
             # Plot the progress
             print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
 
-            # If at save interval => save generated image samples
+            # If at save interval => sample graphs to check progress
             if epoch % sample_interval == 0:
                 self.sample(epoch)
 
@@ -176,7 +172,7 @@ class GAN:
         noise = np.random.normal(0, 1, (r * c, self.n_latent))
         generated = self.generator.predict(noise)
 
-        # rescale and plot
+        # Rescale and plot
 
 
 def create_data():
@@ -309,9 +305,7 @@ def train_clustering(cluster, kwargs, x, graphs, scores):
     plt.legend(loc='best')
     plt.show()
 
-
-def train_gan():
-    pass
+    return model
 
 
 def main():
@@ -325,7 +319,7 @@ def main():
     # plt.hist(scores)
     # plt.show()
 
-    train_clustering(
+    cluster = train_clustering(
         cluster=KMeans,
         kwargs={'n_clusters': 12},
         x=x,
@@ -333,8 +327,18 @@ def main():
         scores=scores,
     )
 
-    gan = GAN()
-    gan.train(epochs=30000, batch_size=32, sample_interval=200)
+    with open('./test_data/model2.dat', 'wb') as file:
+        pickle.dump(cluster, file)
+
+    x_train = np.array([
+        np.reshape(vector[:-1], (8, 8, 1)) for vector in x if vector[-1] > 22
+    ])
+
+    gan = GAN(8, 8, 1, 100)
+    gan.train(x_train, epochs=30000, batch_size=32, sample_interval=200)
+
+    with open('./test_data/gan2.dat', 'wb') as file:
+        pickle.dump(gan, file)
 
 
 if __name__ == '__main__':
