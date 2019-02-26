@@ -11,14 +11,171 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import sys
 
 from collections import deque
 from itertools import groupby
-from scipy.cluster.hierarchy import fclusterdata
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout
+from keras.layers import BatchNormalization, Activation, ZeroPadding2D
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.convolutional import UpSampling2D, Conv2D
+from keras.models import Sequential, Model
+from keras.optimizers import Adam
+from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
 
-from graphs import assign_edges, assign_biases, fully_connected
+from graphs import assign_edges, assign_biases, draw_chimera, fully_connected
+
+
+class GAN:
+    def __init__(
+            self,
+            n_rows,
+            n_columns,
+            n_channels,
+            n_latent,
+            optimizer=Adam(0.0002, 0.5),
+            loss_function='binary_crossentropy',
+    ):
+        self.n_rows = n_rows
+        self.n_columns = n_columns
+        self.n_channels = n_channels
+        self.shape = (self.n_rows, self.n_columns, self.n_channels)
+        self.n_latent = n_latent
+
+        self.optimizer = optimizer
+        self.loss_function = loss_function
+
+        # Build and compile the discriminator
+        self.discriminator = self.build_discriminator()
+        self.discriminator.compile(
+            loss=self.loss_function,
+            optimizer=self.optimizer,
+            metrics=['accuracy'],
+        )
+
+        # Build the generator
+        self.generator = self.build_generator()
+
+        # The generator takes noise as input and generates matrices
+        z = Input(shape=(self.n_latent,))
+        matrix = self.generator(z)
+
+        # For the combined model we will only train the generator
+        self.discriminator.trainable = False
+
+        # The discriminator takes generated images as input and determines validity
+        validity = self.discriminator(matrix)
+
+        # The combined model  (stacked generator and discriminator)
+        # Trains the generator to fool the discriminator
+        self.combined = Model(z, validity)
+        self.combined.compile(
+            loss=self.loss_function,
+            optimizer=self.optimizer,
+        )
+
+    def build_generator(self):
+        """The generator takes a vector of random numbers as input and a
+        matrix as output.
+
+        From the vector of random numbers, the model has four layers,
+        increasing the size of the output until it is reshaped into the
+        desired matrix shape, which is a sample within the set.
+        """
+        inputs = Input(shape=(self.n_latent,))
+
+        model = Sequential()
+        model.add(Dense(256, input_dim=self.n_latent))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(BatchNormalization(momentum=0.8))
+        model.add(Dense(512))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(BatchNormalization(momentum=0.8))
+        model.add(Dense(1024))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(BatchNormalization(momentum=0.8))
+        model.add(Dense(np.prod(self.shape), activation='tanh'))
+        model.add(Reshape(self.shape))
+        model.summary()
+
+        outputs = model(inputs)
+
+        return Model(inputs, outputs)
+
+    def build_discriminator(self):
+        """The discriminator takes the matrix as input and a single
+        number as output.
+
+        From the flattened matrix, the model has three layers, reducing
+        the output size until it is a single number, which determines
+        whether or not the input is within the set.
+        """
+        inputs = Input(shape=self.shape)
+
+        model = Sequential()
+        model.add(Flatten(input_shape=self.shape))
+        model.add(Dense(512))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(256))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(1, activation='sigmoid'))
+        model.summary()
+
+        outputs = model(inputs)
+
+        return Model(inputs, outputs)
+
+    def train(self, x_train, epochs, batch_size=128, sample_interval=50):
+        # Adversarial ground truths
+        valid = np.ones((batch_size, 1))
+        fake = np.zeros((batch_size, 1))
+
+        for epoch in range(epochs):
+
+            # ---------------------
+            #  Train Discriminator
+            # ---------------------
+
+            # Select a random batch of matrices
+            indices = np.random.randint(0, x_train.shape[0], batch_size)
+            matrices = x_train[indices]
+
+            noise = np.random.normal(0, 1, (batch_size, self.n_latent))
+
+            # Generate a batch of new images
+            generated = self.generator.predict(noise)
+
+            # Train the discriminator
+            d_loss_real = self.discriminator.train_on_batch(matrices, valid)
+            d_loss_fake = self.discriminator.train_on_batch(generated, fake)
+            d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+
+            # ---------------------
+            #  Train Generator
+            # ---------------------
+
+            # Why is noise generated from normal distribution?
+            noise = np.random.normal(0, 1, (batch_size, self.n_latent))
+
+            # Train the generator (to have the discriminator label samples as valid)
+            g_loss = self.combined.train_on_batch(noise, valid)
+
+            # Plot the progress
+            print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
+
+            # If at save interval => sample graphs to check progress
+            if epoch % sample_interval == 0:
+                self.sample(epoch)
+
+    def sample(self, epoch):
+        n_samples = 5
+        noise = np.random.normal(0, 1, (n_samples, self.n_latent))
+        generated = self.generator.predict(noise)
+
+        # Rescale and plot
+        for matrix in generated:
+            graph = matrix_to_graph(matrix)
+            print(score_graph(graph))
 
 
 def create_data():
@@ -76,19 +233,20 @@ def score_graph(graph):
     inner_rim = ((1, 6), (2, 6), (2, 5), (1, 5))
 
     if all(graph.get(edge, 0.0) == 1.0 for edge in outer_rim):
-        score += 10
+        score += 10 + np.random.random() - 0.5
 
     if all(graph.get(edge, 0.0) == 1.0 for edge in inner_rim):
-        score += 10
+        score += 10 + np.random.random() - 0.5
 
     for n1 in range(0, 8):
         edges = 0
 
         for n2 in range(0, 8):
-            edges += graph.get((n1, n2), 0.0)
+            if n1 != n2:
+                edges += graph.get((n1, n2), 0.0)
 
         if edges == 3.0:
-            score += 5
+            score += 5 + np.random.random() - 0.5
 
     return score
 
@@ -98,6 +256,11 @@ def load_data():
     with open('./test_data/test2.dat', 'rb') as file:
         graphs, scores = pickle.load(file)
 
+    return graphs, scores
+
+
+def format_graphs(graphs):
+    """Formats the D-Wave inputs into a 1-D vector."""
     matrices = deque()
     for graph in graphs:
         matrix = np.zeros(shape=(8, 8))
@@ -107,11 +270,7 @@ def load_data():
 
         matrices.append(matrix.flatten())
 
-    return matrices, scores
-
-
-def train_clustering():
-    pass
+    return matrices
 
 
 def hamming_distance(x, y):
@@ -126,54 +285,79 @@ def cosine_similarity(x, y):
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 
-def train_gan():
-    pass
-
-
-def main():
-    # graphs, scores = create_data()
-    graphs, scores = load_data()
-    x = np.array([
-        np.append(graph, [score]) for graph, score in zip(graphs, scores)
-    ])
-
-    # Show groups of scores
-    # plt.hist(scores)
-    # plt.show()
-
-    # Using agglomerative clustering from scipy (doesn't converge)
-    # fcluster = fclusterdata(
-    #     X=x,
-    #     t=10,
-    #     metric=cosine_similarity,
-    # )
-    # plt.hist(fcluster)
-    # plt.show()
-
+def train_clustering(cluster, kwargs, x, graphs, scores):
     # Using k-means from scikit-learn with euclidean distance
-    model = KMeans(
-        n_clusters=10,
-    )
-    model.fit(x)
-    y = model.predict(x)
+    model = cluster(**kwargs)
+    y = model.fit_predict(x)
 
-    zipper = sorted(zip(x, y), key=lambda x: x[-1])
-    x, y = list(zip(*zipper))
+    zipper = sorted(zip(x, y, graphs, scores), key=lambda x: x[1])
+    x, y, graphs, scores = list(zip(*zipper))
     x = np.array(x)
     indx = 0
     for component, components in groupby(y):
         components = len(list(components))
         plt.plot(
-            sorted(x[indx:indx+components, -1]),
+            sorted(scores[indx:indx+components]),
             label='{}'.format(component)
         )
+        # for i in range(5):
+        #     print(scores[indx+i])
+        #     draw_chimera(graphs[indx+i])
         indx += components
 
     plt.legend(loc='best')
     plt.show()
 
+    return model
 
+
+def matrix_to_graph(matrix):
+    matrix = np.reshape(matrix, (8, 8))
+
+    graph = dict()
+    for n1, row in enumerate(matrix):
+        for n2, weight in enumerate(row):
+            key = tuple(sorted([n1, n2]))
+            weight = round(weight, 4)
+            graph[key] = (graph.get(key, weight) + weight) / 2.0
+
+    return graph
+
+
+def main():
+    # graphs, scores = create_data()
+    graphs, scores = load_data()
+    matrices = format_graphs(graphs)
+    x = np.array([
+        np.append(matrix, [score]) for matrix, score in zip(matrices, scores)
+    ])
+    # x = np.array(matrices)
+
+    # Show groups of scores
+    # plt.hist(scores)
+    # plt.show()
+
+    cluster = train_clustering(
+        cluster=KMeans,
+        kwargs={'n_clusters': 12},
+        x=x,
+        graphs=graphs,
+        scores=scores,
+    )
+
+    with open('./test_data/model2.dat', 'wb') as file:
+        pickle.dump(cluster, file)
+
+    x_train = np.array([
+        np.reshape(vector[:-1], (8, 8, 1)) for vector in x if vector[-1] > 22
+    ])
+
+    gan = GAN(8, 8, 1, 100)
+    gan.train(x_train, epochs=10000, batch_size=64, sample_interval=500)
+    gan.combined.save('./test_data/generator.h5')
+    gan.discriminator.save('./test_data/discriminator.h5')
 
 
 if __name__ == '__main__':
     main()
+
