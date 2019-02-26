@@ -168,11 +168,14 @@ class GAN:
                 self.sample(epoch)
 
     def sample(self, epoch):
-        r, c = 5, 5
-        noise = np.random.normal(0, 1, (r * c, self.n_latent))
+        n_samples = 5
+        noise = np.random.normal(0, 1, (n_samples, self.n_latent))
         generated = self.generator.predict(noise)
 
         # Rescale and plot
+        for matrix in generated:
+            graph = matrix_to_graph(matrix)
+            print(score_graph(graph))
 
 
 def create_data():
@@ -308,11 +311,26 @@ def train_clustering(cluster, kwargs, x, graphs, scores):
     return model
 
 
+def matrix_to_graph(matrix):
+    matrix = np.reshape(matrix, (8, 8))
+
+    graph = dict()
+    for n1, row in enumerate(matrix):
+        for n2, weight in enumerate(row):
+            key = tuple(sorted([n1, n2]))
+            weight = round(weight, 4)
+            graph[key] = (graph.get(key, weight) + weight) / 2.0
+
+    return graph
+
+
 def main():
     # graphs, scores = create_data()
     graphs, scores = load_data()
     matrices = format_graphs(graphs)
-    x = np.array([np.append(matrix, [score]) for matrix, score in zip(matrices, scores)])
+    x = np.array([
+        np.append(matrix, [score]) for matrix, score in zip(matrices, scores)
+    ])
     # x = np.array(matrices)
 
     # Show groups of scores
@@ -335,10 +353,9 @@ def main():
     ])
 
     gan = GAN(8, 8, 1, 100)
-    gan.train(x_train, epochs=30000, batch_size=32, sample_interval=200)
-
-    with open('./test_data/gan2.dat', 'wb') as file:
-        pickle.dump(gan, file)
+    gan.train(x_train, epochs=10000, batch_size=64, sample_interval=500)
+    gan.combined.save('./test_data/generator.h5')
+    gan.discriminator.save('./test_data/discriminator.h5')
 
 
 if __name__ == '__main__':
