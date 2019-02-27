@@ -21,7 +21,7 @@ def draw_chimera(dwave):
     # Create graph
     graph = nx.Graph()
     graph.add_weighted_edges_from([
-        (n1, n2, w) for (n1, n2), w in dwave.items()
+        (n1, n2, w) for (n1, n2), w in dwave.items() if w != 0.0
     ])
 
     # Extract nodes and edges
@@ -31,16 +31,21 @@ def draw_chimera(dwave):
     # Calculate number of chimera units and total number of nodes
     n_chimeras = (max(nodes) // 8) + 1
     n_nodes = n_chimeras * 8
-    graph.add_nodes_from(range(n_nodes))
 
     # Assign positions to nodes
     positions = dict()
-    for n_unit, unit in enumerate(grouper(range(n_nodes), 8)):
-        for n_node, node in enumerate(unit):
-            if n_node < (8 * n_unit + 4):
-                positions[node] = (4 * n_unit + n_node, 4 * n_unit + 1.5)
-            else:
-                positions[node] = (4 * n_unit + 1.5, n_node - 8 * n_unit - 4)
+    for node in range(n_nodes):
+        if node not in nodes:
+            continue
+
+        if (node // 4) % 2 == 0:
+            x = 4 * ((node % 128) // 8) + ((node % 128) % 8)
+            y = -4 * (node // 128)
+            positions[node] = (x, y)
+        else:
+            x = (4 * ((node % 128) // 8)) + 1.5
+            y = (-4 * (node // 128)) + ((node % 8) - 5.5)
+            positions[node] = (x, y)
 
     # Draw the graph
     fig = plt.figure()
@@ -53,7 +58,7 @@ def draw_chimera(dwave):
     drawn_edges = nx.draw_networkx_edges(
         graph,
         pos=positions,
-        edgelist = edges.keys(),
+        edgelist=edges.keys(),
         edge_color=list(edges.values()),
         width=3,
         edge_cmap=get_cmap('seismic'),
