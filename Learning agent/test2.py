@@ -5,6 +5,8 @@
    that this is not perfect since it does not take into account possible
    interactions that are not through direct connections.
 4. From the clustering, use a GAN to generate new samples in the cluster.
+
+Churn-off bound 
 """
 
 

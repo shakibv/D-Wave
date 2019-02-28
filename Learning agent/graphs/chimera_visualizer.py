@@ -3,8 +3,6 @@ import networkx as nx
 
 from matplotlib.cm import get_cmap
 
-from utilities import grouper
-
 
 def draw_chimera(dwave):
     """

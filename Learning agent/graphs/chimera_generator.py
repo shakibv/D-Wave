@@ -22,7 +22,7 @@ class Chimera:
 
         return weights
 
-    def assign_edges(self, r=0.5, sampler=np.random.random):
+    def assign_edges(self, rows=1, columns=1, r=0.5, sampler=np.random.random):
         """Creates edges between nodes and assigns weights.
 
         TODO: expand assignment for more than a single unit
@@ -38,6 +38,16 @@ class Chimera:
         (dict) keys are tuples of the two edges connected and the values
         are the weight assignments.
         """
+        def assign_edge(n1, n2, row, column):
+            n1 += (128 * row) + (8 * column)
+            n2 += (128 * row) + (8 * column)
+
+            if 0 <= n1 < 2048 and 0 <= n2 < 2048:
+                edge = tuple(sorted([n1, n2]))
+                return edge
+
+            return None
+
         internal_edges = (
             (0, 4), (0, 5), (0, 6), (0, 7),
             (1, 4), (1, 5), (1, 6), (1, 7),
@@ -53,31 +63,53 @@ class Chimera:
             (0, 128), (1, 129), (2, 130), (3, 131),
         )
 
-        cell = dict()
-        for edge in internal_edges:
-            cell[edge] = (r > np.random.random()) * sampler()
+        graph = dict()
+        for row in range(rows):
+            for column in range(columns):
+                # Assign internal edges
+                for n1, n2 in internal_edges:
+                    edge = assign_edge(n1, n2, row, column)
+                    if edge is not None:
+                        graph[edge] = (r > np.random.random()) * sampler()
 
-        # Assign horizontal and vertical edges but ensure at least one, otherwise cannot replicate
-        cell[horizontal_edges[np.random.randint(4)]] = sampler()
-        cell[vertical_edges[np.random.randint(4)]] = sampler()
+                # Ensure at least one horizontal and vertical edge
+                indx = np.random.randint(4)
+                edge = assign_edge(*horizontal_edges[indx], row, column)
+                if edge is not None:
+                    graph[edge] = sampler()
 
-        for edge in horizontal_edges:
-            if cell.get(edge) is None:
-                cell[edge] = sampler()
+                indx = np.random.randint(4)
+                edge = assign_edge(*vertical_edges[indx], row, column)
+                if edge is not None:
+                    graph[edge] = sampler()
 
-        for edge in vertical_edges:
-            if cell.get(edge) is None:
-                cell[edge] = sampler()
+                # Assign the rest of the external edges
+                for n1, n2 in horizontal_edges:
+                    edge = assign_edge(n1, n2, row, column)
+                    if edge is not None and graph.get(edge) is None:
+                        graph[edge] = (r > np.random.random()) * sampler()
 
-        return cell
+                for n1, n2 in vertical_edges:
+                    edge = assign_edge(n1, n2, row, column)
+                    if edge is not None and graph.get(edge) is None:
+                        graph[edge] = (r > np.random.random()) * sampler()
+
+        return graph
 
     def create_graph(
             self,
+            rows=1,
+            columns=1,
             r=0.5,
             bias_sampler=np.random.random,
             edge_sampler=np.random.random
     ):
-        graph = self.assign_edges(r, edge_sampler)
+        graph = self.assign_edges(
+            rows=rows,
+            columns=columns,
+            r=r,
+            sampler=edge_sampler
+        )
         graph.update(self.assign_biases(bias_sampler))
 
         return graph
@@ -133,9 +165,10 @@ def main():
 
     chimera = Chimera()
     while True:
-        graph = chimera.create_graph()
+        graph = chimera.create_graph(rows=1, columns=3)
         if fully_connected(graph):
-            draw_chimera(chimera.replicate(3, 3, graph))
+            draw_chimera(graph)
+            break
 
 
 if __name__ == '__main__':
