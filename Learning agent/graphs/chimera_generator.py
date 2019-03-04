@@ -3,35 +3,90 @@ import numpy as np
 from copy import deepcopy
 from itertools import combinations
 
+from path_finding import fully_connected
+
 
 class Chimera:
-    """Creates a chimera graph for the D-Wave 2000Q.
+    """A class for creating and managing chimera graphs.
 
     The chimera graph is based on a 16x16 grid of bipartite cells with
-    8 qubits each.
+    8 qubits each. The basic functionality of the class is outlined
+    below.
+
+    1. To create a graph, use the self.create_graph() method.
+
+    >>> chimera = Chimera()
+    >>> graph = chimera.create_graph()
+
+    2. To increase the size of the graph, use the self.replicate()
+       method.
+
+    >>> graphs = list()
+    >>> for i in range(1, 16):
+    >>>     for j in range(1, 16):
+    >>>         graphs.append(
+    >>>             chimera.replicate(
+    >>>                 graph=graph,
+    >>>                 rows=i,
+    >>>                 columns=j,
+    >>>             )
+    >>>         )
+
+    3. The graphs can be made to occupy different regions of the D-Wave
+       architecture by using the self.translate() method. For example, to
+       translate the graph 3 chimera units down and 2 chimera units
+       right:
+
+    >>> translated_graph = chimera.translate(
+    >>>     graph=graph,
+    >>>     x=3,
+    >>>     y=-2,
+    >>> )
+
     """
     def __init__(self):
-        self.graph = self.create_graph()
+        pass
 
-    def assign_biases(self, sampler=np.random.random_sample):
-        """Assigns biases to each node.
+    def assign_biases(self, graph, sampler=np.random.random_sample):
+        """Assigns biases to nodes in a given graph.
+
+        The intention is for the edges to be assigned first, and the
+        biases assigned afterword.
+
+        Parameters
+        ------------
+        graph  : (dict)     the output of self.assign_edges().
+        sampler: (function) the sampling function to assign biases to
+                            each node.
+
+        Returns
+        ---------
+        (dict) the updated graph with the assigned biases.
         """
-        weights = dict()
-        for node in range(0, 8):
-            weights[(node, node)] = sampler()
+        biases = dict()
+        for (n1, n2), w in graph.items():
+            if biases.get((n1, n1)) is None:
+                biases[(n1, n1)] = sampler()
 
-        return weights
+            if biases.get((n2, n2)) is None:
+                biases[(n2, n2)] = sampler()
+
+        graph.update(biases)
+
+        return graph
 
     def assign_edges(self, rows=1, columns=1, r=0.5, sampler=np.random.random):
         """Creates edges between nodes and assigns weights.
 
-        TODO: expand assignment for more than a single unit
-        TODO: get a better way to assign edges
-
         Parameters
         ------------
-        r: (float) rate at which the edges are turned on.
-        sampler: (function) sampling function.
+        rows   : (int)      the number of rows of chimera units in the
+                            graph.
+        columns: (int)      the number of columns of chimera units in the
+                            graph.
+        r      : (float)    rate at which the edges are turned on.
+        sampler: (function) the sampling function used to assign weights
+                            to each edge.
 
         Returns
         ---------
@@ -102,36 +157,174 @@ class Chimera:
             columns=1,
             r=0.5,
             bias_sampler=np.random.random,
-            edge_sampler=np.random.random
+            edge_sampler=np.random.random,
+            connected=True,
     ):
+        """Creates a chimera graph in the D-Wave input format.
+
+        The edges are assigned first, and the biases are assigned after.
+
+        Parameters
+        ------------
+        rows        : (int)      the number of rows of chimera units in
+                                 the graph.
+        columns     : (int)      the number of columns of chimera units
+                                 in the graph.
+        r           : (float)    the rate at which the edges are turned
+                                 on.
+        bias_sampler: (function) the sampler to assign biases to each
+                                 node.
+        edge_sampler: (function) the sampler to assign weights to each
+                                 edge.
+        connected   : (bool)     determines if the returned graph should
+                                 be fully connected.
+
+        Returns
+        ---------
+        (dict) a graph with the assigned edges and biases.
+        """
+        # Create the initial graph
         graph = self.assign_edges(
             rows=rows,
             columns=columns,
             r=r,
-            sampler=edge_sampler
+            sampler=edge_sampler,
         )
-        graph.update(self.assign_biases(bias_sampler))
+
+        while connected:
+            # Create a new graph if it is not connected
+            if fully_connected(graph):
+                break
+            else:
+                graph = self.assign_edges(
+                    rows=rows,
+                    columns=columns,
+                    r=r,
+                    sampler=edge_sampler,
+                )
+
+        graph = self.assign_biases(
+            graph=graph,
+            sampler=bias_sampler
+        )
 
         return graph
 
-    def replicate(self, n_rows=1, n_columns=1, graph=None):
+    @staticmethod
+    def find_n_nodes(graph):
+        """Determines the maximum numbered node in a given graph.
+
+        Parameters
+        ------------
+        graph: (dict) the D-Wave input or the output from
+                      self.create_graph().
+
+        Returns
+        ---------
+        (int) the maximum numbered node.
+        """
+        nodes = set()
+        for (n1, n2), w in graph.items():
+            nodes.update({n1, n2})
+
+        return max(nodes)
+
+    def find_shape(self, graph):
+        """Determines the shape of the graph in terms of the number of
+        chimera units.
+
+        Parameters
+        ------------
+        graph: (dict) the D-Wave input or the output from
+                      self.create_graph().
+
+        Returns
+        ---------
+        (int, int) the number of rows and columns of chimera units in the
+        graph.
+        """
+        n_nodes = self.find_n_nodes(graph)
+        n_rows = (n_nodes // 128)
+        n_columns = ((n_nodes % 128) // 8) + 1
+
+        return n_rows, n_columns
+
+    def graph_to_matrix(self, graph, n_nodes=None):
+        """Formats the D-Wave inputs into the corresponding adjacency
+        matrix.
+
+        Parameters
+        ------------
+        graph  : (dict) the D-Wave input or the output from
+                        self.create_graph().
+        n_nodes: (int)  the number of nodes the matrix should specify.
+
+        Returns
+        ---------
+        (np.array) an nxn adjacency matrix of the graph.
+        """
+        if n_nodes is None:
+            n_nodes = self.find_n_nodes(graph)
+
+        matrix = np.zeros(shape=(n_nodes, n_nodes))
+        for (n1, n2), w in graph.items():
+            matrix[n1, n2] = w
+            matrix[n2, n1] = w
+
+        return matrix
+
+    @staticmethod
+    def matrix_to_graph(matrix):
+        """Formats the adjacency matrix into the D-Wave intput format.
+
+        The adjacency matrix is assumed to be symmetrical. If the
+        elements are not exactly symmetrical, then the mean of the
+        corresponding elements is used to assign the weight.
+
+        Parameters
+        ------------
+        matrix: (np.array) an nxn array.
+
+        Returns
+        ---------
+        (dict) the adjacency matrix in the D-Wave input format.
+        """
+        graph = dict()
+        for n1, row in enumerate(matrix):
+            for n2, weight in enumerate(row):
+                key = tuple(sorted([n1, n2]))
+                weight = round(weight, 4)
+                graph[key] = (graph.get(key, weight) + weight) / 2.0
+
+        return graph
+
+    def replicate(self, graph, rows=1, columns=1):
         """Replicates the cell to increase the size of the graph.
 
-        Note that this method assumes the smallest size is a single cell
-        using nodes 0-8.
-        Note that this method assumes a 16x16 grid, the size of the
-        D-Wave 2000Q.
+        Parameters
+        ------------
+        graph  : (dict) the D-Wave input or output of
+                        self.create_graph().
+        rows   : (int)  the number of times the graph is replicated
+                        downward, or the number of rows of graph
+                        replications.
+        columns: (int)  the number of times the graph is replicated
+                        rightward, of the number of columns of graph
+                        replications.
+
+        Returns
+        ---------
+        (dict) the replicated graph in the D-Wave input format.
         """
-        if graph is None:
-            graph = deepcopy(self.graph)
+        n_rows, n_columns = self.find_shape(graph)
 
         replicated = dict()
-        for row in range(n_rows):
-            for column in range(n_columns):
+        for row in range(rows):
+            for column in range(columns):
                 for (n1, n2), w in graph.items():
                     # Rescale nodes to correct position
-                    n1 += (128 * row) + (8 * column)
-                    n2 += (128 * row) + (8 * column)
+                    n1 += (128 * row * n_rows) + (8 * column * n_columns)
+                    n2 += (128 * row * n_rows) + (8 * column * n_columns)
 
                     # Ignore if one of the nodes is out of range
                     if 0 <= n1 < 2048 and 0 <= n2 < 2048:
@@ -140,11 +333,22 @@ class Chimera:
 
         return replicated
 
-    def translate(self, x=0, y=0, graph=None):
-        """Translates a graph by a number of cells."""
-        if graph is None:
-            graph = deepcopy(self.graph)
+    def translate(self, graph, x=0, y=0):
+        """Translates a graph by a number of chimera units.
 
+        The translation is based on the normal cartesian plane, where
+        positive x is rightward and positive y is upward.
+
+        Parameters
+        ------------
+        x    : (int)  the number of chimera units to translate the graph
+                      in the horizontal direction. This can also be
+                      negative.
+        y    : (int)  the number of chimera units to translate the graph
+                      in the vertical direction. This can also be
+                      negative.
+        graph: (dict) the D-Wave input or output of self.create_graph().
+        """
         translated = dict()
         for (n1, n2), w in graph.items():
             # Rescale nodes to correct position
@@ -164,11 +368,9 @@ def main():
     from path_finding import fully_connected
 
     chimera = Chimera()
-    while True:
-        graph = chimera.create_graph(rows=1, columns=3)
-        if fully_connected(graph):
-            draw_chimera(graph)
-            break
+    graph = chimera.create_graph(rows=2, columns=3)
+    draw_chimera(graph)
+    draw_chimera(chimera.replicate(graph, 2, 2))
 
 
 if __name__ == '__main__':
