@@ -8,7 +8,6 @@ def draw_chimera(dwave):
     """
     Creates an image of the chimera graph.
 
-    TODO: generalize assignment of node positions for more than chimeras in a row
     TODO: allow modification of drawing parameters
     TODO: draw nodes with colors of biases
 
