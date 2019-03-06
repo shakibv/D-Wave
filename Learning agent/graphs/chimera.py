@@ -365,7 +365,6 @@ class Chimera:
 
 def main():
     from chimera_visualizer import draw_chimera
-    from path_finding import fully_connected
 
     chimera = Chimera()
     graph = chimera.create_graph(rows=2, columns=3)
