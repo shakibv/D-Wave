@@ -4,7 +4,8 @@
 
 Learning agent
 --------------
-Graph clustering: K-means   
+Graph clustering: K-means
+Graph generation: Generative adversarial networks
 
 
 Performance metrics

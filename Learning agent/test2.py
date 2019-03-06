@@ -5,6 +5,8 @@
    that this is not perfect since it does not take into account possible
    interactions that are not through direct connections.
 4. From the clustering, use a GAN to generate new samples in the cluster.
+
+Churn-off bound 
 """
 
 
@@ -23,7 +25,7 @@ from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from sklearn.cluster import AgglomerativeClustering, KMeans, SpectralClustering
 
-from graphs import assign_edges, assign_biases, draw_chimera, fully_connected
+from graphs import Chimera, draw_chimera, fully_connected
 
 
 class GAN:
@@ -189,13 +191,17 @@ def create_data():
     graphs = deque()
     scores = deque()
 
+    chimera = Chimera()
     for r in range(1, 10):
         r /= 10.0
 
         n = 0
         while n < 1000:
-            graph = assign_edges(r=r, sampler=sampler)
-            graph.update(assign_biases(sampler=sampler))
+            graph = chimera.create_graph(
+                r=r,
+                bias_sampler=sampler
+                edge_sampler=sampler,
+            )
 
             if fully_connected(graph):
                 score = score_graph(graph)
