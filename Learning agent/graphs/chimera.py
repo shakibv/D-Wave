@@ -164,6 +164,9 @@ class Chimera:
         """Creates a chimera graph in the D-Wave input format.
 
         The edges are assigned first, and the biases are assigned after.
+        Sampler functions should be created to assign the weights and
+        biases for the edges and nodes. These functions should take no
+        arguments as input and return a single number.
 
         Parameters
         ------------
