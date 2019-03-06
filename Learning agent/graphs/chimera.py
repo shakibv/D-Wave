@@ -3,6 +3,7 @@ import numpy as np
 from copy import deepcopy
 from itertools import combinations
 
+from chimera_visualizer import draw_chimera
 from path_finding import fully_connected
 
 
@@ -298,6 +299,11 @@ class Chimera:
 
         return graph
 
+    @staticmethod
+    def plot(graph):
+        """Plots the graph."""
+        draw_chimera(graph)
+
     def replicate(self, graph, rows=1, columns=1):
         """Replicates the cell to increase the size of the graph.
 
@@ -368,8 +374,8 @@ def main():
 
     chimera = Chimera()
     graph = chimera.create_graph(rows=2, columns=3)
-    draw_chimera(graph)
-    draw_chimera(chimera.replicate(graph, 2, 2))
+    chimera.plot(graph)
+    chimera.plot(chimera.replicate(graph, 2, 2))
 
 
 if __name__ == '__main__':
