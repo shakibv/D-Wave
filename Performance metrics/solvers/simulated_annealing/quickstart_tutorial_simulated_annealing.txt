@@ -1,0 +1,72 @@
+================================================================================
+Simulated Annealing Solver Tutorial
+
+  *** Note that all steps/procedures described are intended for use on a 
+      machine running Windows 10. ***
+
+================================================================================
+Quickstart/Tutorial:
+
+--------------------------------------------------------------------------------
+
+CONFIGURING DEPENDENCIES:
+-------------------------
+This code requires a C++11 compatible compilier to be callable from any 
+subdirectory within the command prompt. If you already have this setup, skip to
+the last section.
+
+  1. First, you need a C++11 compatible compiler. Download and install the MinGW 
+     Installer from the downloads page on http://www.mingw.org/.
+  2. Open MinGW installer. On the left hand pane, select "Basic Setup", then, 
+     in the centre pane, select the tick box for "mingw32-gcc-g++-bin" and 
+     choose "Mark for Installation". From the "Installation" drop-down menu, 
+     select "Apply Changes". This will install the compiler.
+  3. Now the compiler needs to be added to your system path so that it is 
+     callable within the command prompt from any directory. On Windows 10, 
+     open your advanced system settings by clicking the Windows flag on your 
+     task bar and typing "Advanced System Settings" and selecting "View
+     advanced system settings".
+  4. Click "Environment Variables". Under the subheading "System Variables",
+     choose "Path" and click "Edit".
+  5. Click "New" and, assuming that you let MinGW install in its default 
+     location, paste C:\MinGW\bin into the new entry. If you installed MinGW
+     in a different location, navigate to that location, then to the "bin"
+     subdirectory and past that address into the new entry.
+  6. Click "Ok" three times to close all advanced system variables windows.
+     
+
+TESTING THE SIMULATED ANNEALING CODE:
+-------------------------------------
+
+  1. Download the folder entitled simulated_annealing. The bin folder within
+     contains the simulated annealing source codes. All of these files
+     must stay in the same directory, but the directory can be moved/renamed
+     if desired.
+  2. Open the Python file "send_to_SA.py" in a Python IDE.
+  3. Add the line:
+
+	print(SA(r"C:\users\John\Documents", "instance.txt"))
+
+     to the end of the file, changing the first parameter to the absolute
+     path of the bin folder that you downloaded in step 1.
+  4. Run the file.
+  
+COMMON ERRORS:
+--------------
+If you get an error when you run the file, try adding an "r" before the 
+directory input you changed in step 3 above. For example:
+
+    r"C:\Users\user\Downloads\simulated_annealing\bin"
+
+Note that ALL directory path parameters (directory, save, solverDir)
+must be raw strings, meaning that they must be written in the form:
+
+	r"..."
+ 
+VERIFYING SUCCESS:
+------------------
+The code has run successfully if the console displays the following:
+
+(-360, 200)
+
+================================================================================
