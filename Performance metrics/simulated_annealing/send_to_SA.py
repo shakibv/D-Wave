@@ -145,19 +145,22 @@ def SA(directory, instance, solver="an_ms_r1_nf", solver_params={"-s":200,"-r":1
         else:
             command = command + str(param+" ")
     
-    # Run the batch file and decode the output
+    # Run the C++ solver and interpret the output
     if dirs_dont_match:
         p = Popen(command, cwd=solverDir, stdout=PIPE, stderr=PIPE, shell=True)
     else:
         p = Popen(command, cwd=directory, stdout=PIPE, stderr=PIPE, shell=True)
     stdout, stderr = p.communicate()
-    stdout = stdout.decode("utf-8")
+    stdout, stderr = stdout.decode("utf-8"), stderr.decode("utf-8")
     p_status = p.wait()
     if dirs_dont_match:
         remove(solverDir+"/"+instance+".txt")
         
+    # Print verbose output
     if verbose:
-        print("Output:\n\n", stdout, "Error: ", stderr)
+        print("Simulated Annealing Solution:\n\n", stdout)
+        if stderr != '':
+            print("Error: ", stderr)
     
     # Save the output if desired
     if save != None:
@@ -174,6 +177,4 @@ def SA(directory, instance, solver="an_ms_r1_nf", solver_params={"-s":200,"-r":1
     output = split("\r\n|\t| ", stdout)
     output = list(filter(None, output))
     
-    return int(output[0]), solver_params["-s"]
-    
-print(SA(r"D:\Physics 598\GitHub\solvers\simulated_annealing", "instance.txt"))
+    return float(output[0]), solver_params["-s"], output[2]
