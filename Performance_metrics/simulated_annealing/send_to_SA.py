@@ -158,7 +158,7 @@ def SA(directory, instance, solver="an_ms_r1_nf", solver_params={"-s":200,"-r":1
         
     # Print verbose output
     if verbose:
-        print("Simulated Annealing Solution:\n\n", stdout)
+        print("Simulated Annealing Solution:\n\nEnergies:\tCounts:\tSuccess Rate:\tInstance File:\n", stdout)
         if stderr != '':
             print("Error: ", stderr)
     
