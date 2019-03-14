@@ -268,7 +268,7 @@ class Chimera:
         (np.array) an nxn adjacency matrix of the graph.
         """
         if n_nodes is None:
-            n_nodes = self.find_n_nodes(graph)
+            n_nodes = self.find_n_nodes(graph) + 1
 
         matrix = np.zeros(shape=(n_nodes, n_nodes))
         for (n1, n2), w in graph.items():
@@ -373,12 +373,26 @@ class Chimera:
 
 
 def main():
+    import matplotlib.pyplot as plt
+
+    from scipy.linalg import svd
+
     from chimera_visualizer import draw_chimera
 
     chimera = Chimera()
     graph = chimera.create_graph(rows=2, columns=3)
     chimera.plot(graph)
     chimera.plot(chimera.replicate(graph, 2, 2))
+
+    matrix = chimera.graph_to_matrix(graph)
+    U, D, Vt = svd(matrix)
+    D = np.diag(D)
+    F = U @ D
+    vector = F.shape[1]
+    rows, columns = matrix.shape
+    for i in range(rows):
+        for j in range(columns):
+            vector += matrix[i, j] * (F[i] + F[j])
 
 
 if __name__ == '__main__':
