@@ -147,7 +147,7 @@ def SA(directory, instance, solver="an_ms_r1_nf", solver_params={"-s":200,"-r":1
     
     # Run the C++ solver and interpret the output
     if dirs_dont_match:
-        p = Popen(command, cwd=solverDir, stdout=PIPE, stderr=PIPE, shell=True)
+        p = Popen('./'+command, cwd=solverDir, stdout=PIPE, stderr=PIPE, shell=True)
     else:
         p = Popen(command, cwd=directory, stdout=PIPE, stderr=PIPE, shell=True)
     stdout, stderr = p.communicate()

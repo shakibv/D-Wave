@@ -3,8 +3,8 @@ import numpy as np
 from copy import deepcopy
 from itertools import combinations
 
-from chimera_visualizer import draw_chimera
-from path_finding import fully_connected
+from .chimera_visualizer import draw_chimera
+from .path_finding import fully_connected
 
 
 class Chimera:
@@ -279,7 +279,7 @@ class Chimera:
 
     @staticmethod
     def matrix_to_graph(matrix):
-        """Formats the adjacency matrix into the D-Wave intput format.
+        """Formats the adjacency matrix into the D-Wave input format.
 
         The adjacency matrix is assumed to be symmetrical. If the
         elements are not exactly symmetrical, then the mean of the
