@@ -377,9 +377,9 @@ solver. Both "-s" and "-r" are required. The rest are optional.
         ║        ║ below                                                                     ║
         ╚════════╩═══════════════════════════════════════════════════════════════════════════╝
 
-        There are several included simulated annealing solvers available.
-        Some of which are not suitable for problems on a Chimera graph.
-        Below is a list of available solvers:
+There are several included simulated annealing solvers available.
+Some of which are not suitable for problems on a Chimera graph.
+Below is a list of available solvers:
 
         ╔═════════════════════╦════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
         ║ an_ms_r1_fi         ║ Multi-spin code for range-1 interactions with magnetic field (approach one)                                        ║
