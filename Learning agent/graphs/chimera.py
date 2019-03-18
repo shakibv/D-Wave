@@ -1,4 +1,5 @@
 import numpy as np
+import yaml
 
 from copy import deepcopy
 from itertools import combinations
@@ -46,7 +47,8 @@ class Chimera:
 
     """
     def __init__(self):
-        pass
+        with open('./vector_indices.yaml', 'r') as file:
+            self.indices = yaml.load(file)
 
     def assign_biases(self, graph, sampler=np.random.random_sample):
         """Assigns biases to nodes in a given graph.
@@ -97,6 +99,12 @@ class Chimera:
         def assign_edge(n1, n2, row, column):
             n1 += (128 * row) + (8 * column)
             n2 += (128 * row) + (8 * column)
+
+            if column == 15:
+                minum = 128 * (i + 1)
+                maxum = minum + 8
+                if minum <= n1 < maxum or minum <= n2 < maxum:
+                    return None
 
             if 0 <= n1 < 2048 and 0 <= n2 < 2048:
                 edge = tuple(sorted([n1, n2]))
@@ -214,25 +222,6 @@ class Chimera:
 
         return graph
 
-    @staticmethod
-    def find_n_nodes(graph):
-        """Determines the maximum numbered node in a given graph.
-
-        Parameters
-        ------------
-        graph: (dict) the D-Wave input or the output from
-                      self.create_graph().
-
-        Returns
-        ---------
-        (int) the maximum numbered node.
-        """
-        nodes = set()
-        for (n1, n2), w in graph.items():
-            nodes.update({n1, n2})
-
-        return max(nodes)
-
     def find_shape(self, graph):
         """Determines the shape of the graph in terms of the number of
         chimera units.
@@ -253,37 +242,35 @@ class Chimera:
 
         return n_rows, n_columns
 
-    def graph_to_matrix(self, graph, n_nodes=None):
+    def graph_to_vector(self, graph):
         """Formats the D-Wave inputs into the corresponding adjacency
         matrix.
+
+        The graph is represented as a vector with length 6016 (the upper
+        bound on the possible number of edges on the D-Wave
+        architecture).
 
         Parameters
         ------------
         graph  : (dict) the D-Wave input or the output from
                         self.create_graph().
-        n_nodes: (int)  the number of nodes the matrix should specify.
 
         Returns
         ---------
-        (np.array) an nxn adjacency matrix of the graph.
+        (np.array) a 6016 length vector.
         """
-        if n_nodes is None:
-            n_nodes = self.find_n_nodes(graph) + 1
-
-        matrix = np.zeros(shape=(n_nodes, n_nodes))
+        vector = np.zeros(shape=6016)
         for (n1, n2), w in graph.items():
-            matrix[n1, n2] = w
-            matrix[n2, n1] = w
+            indx = self.indices[tuple(sorted([n1, n2]))]
+            vector[indx] = w
 
-        return matrix
+        return vector
 
-    @staticmethod
-    def matrix_to_graph(matrix):
-        """Formats the adjacency matrix into the D-Wave input format.
+    def vector_to_graph(self, vector):
+        """Formats the graph vector into the D-Wave input format.
 
-        The adjacency matrix is assumed to be symmetrical. If the
-        elements are not exactly symmetrical, then the mean of the
-        corresponding elements is used to assign the weight.
+        The elements of the graph vector have a direct correspondance to
+        weights or biases on the D-Wave input.
 
         Parameters
         ------------
@@ -291,14 +278,13 @@ class Chimera:
 
         Returns
         ---------
-        (dict) the adjacency matrix in the D-Wave input format.
+        (dict) the graph formatted for D-Wave input.
         """
+        keys = self.indices.key()
+
         graph = dict()
-        for n1, row in enumerate(matrix):
-            for n2, weight in enumerate(row):
-                key = tuple(sorted([n1, n2]))
-                weight = round(weight, 4)
-                graph[key] = (graph.get(key, weight) + weight) / 2.0
+        for indx, w in enumerate(vector):
+            graph[keys[indx]] = w
 
         return graph
 
