@@ -465,7 +465,7 @@
                 print("\n")
                 
             # Compute TTS    
-            result['dwave'].append(dwave['answer']['timing']['anneal_time_per_run']*log(0.01)/log(1-dwave["answer"]["num_occurrences"][0]/settings["dwave_params"]["num_reads"]))
+            result['dwave'].append(dwave['answer']['timing']['anneal_time_per_run']/1E6*log(0.01)/log(1-dwave["answer"]["num_occurrences"][0]/settings["dwave_params"]["num_reads"]))
                 
         # Run Simulated Annealing
         if settings["sa"]:
@@ -480,6 +480,8 @@
                 settings['sa_params']["-s"] = 200
             if "-r" not in settings['sa_params'].keys():
                 settings['sa_params']["-r"] = 1000
+            if "-v" not in settings['sa_params'].keys():
+                settings['sa_params']["-v"] = True
                 
             # Remove "non-standard" parameters from settings and overwrite defaults
             if "solver" in settings['sa_params'].keys():
@@ -508,15 +510,15 @@
                     
             # Run simulated annealer
             if verbose:
-                sa = SA(dir_path, "temp_file.txt", verbose=True, solverDir=solver_path, solver=solver_sa, save=save)
+                sa = SA(dir_path, "temp_file.txt", verbose=True, solverDir=solver_path, solver=solver_sa, save=save, solver_params=settings["sa_params"])
 
             else:
-                sa = SA(dir_path, "temp_file.txt", verbose=False, solverDir=solver_path, solver=solver_sa, save=save)
+                sa = SA(dir_path, "temp_file.txt", verbose=False, solverDir=solver_path, solver=solver_sa, save=save, solver_params=settings["sa_params"])
                 
             # Delete instance data file
             remove(dir_path+"/temp_file.txt")
             
             # Compute TTS
-            result['sa'].append(float(sa[1])*log(0.01)/log(1-float(sa[2])))
+            result['sa'].append(sa[2]/sa[3]*log(0.01)/log(1-sa[1]))
             
     return result
