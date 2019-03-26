@@ -1,6 +1,7 @@
 # Import Packages (Requests takes care of http stuff)
 import json
 import requests
+import re
 
 """
 Tutorial:
@@ -162,7 +163,20 @@ def post_problem(problem, t="ising", solver="DW_2000Q_VFYC_2_1", token="ARL-251d
     
     # Sends the request to the D-Wave server and returns its response
     r = requests.post(url, data=my_data, headers=my_header)
-    return json.loads(r.text)
+    
+    # Continuously check to see if the solution has been found before returning
+    # the result. (When done, response string will contain "answer")
+    response = r.text
+    
+    # Prepare to request answer if it is not already available.
+    url = "https://cloud.dwavesys.com/sapi/problems/"+str(json.loads(response)["id"])+"/answer/"
+    
+    # Continuously request answer to submitted problem until string with "answer" is returned
+    while re.search("answer", response) == None:
+        r = requests.get(url, headers=my_header)
+        response = r.text
+    
+    return json.loads(response)
     
 def convert_to_text(problem, num_qubits):
     """

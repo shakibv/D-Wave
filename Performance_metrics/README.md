@@ -408,3 +408,35 @@ The output is a dictionary with keys "dwave" and/or "sa" (depending on which
 solvers were used to evaluate the problem instance) which have lists of
 TTS values associated with them. The TTS values are sorted in the same order
 as the instances were in the instances input parameter.
+
+Plot Settings Parameter:
+========================
+
+run_instances accepts a parameter called plot_settings. This allows for the
+results of the various solvers to be depicted graphically. Note that none of these
+parameters are required. By default, plot_settings is set to None, thereby not
+plotting the results. Currently, it supports the following key-value pairs:
+
+    ╔════════════════╦═══════════════════════════════════════════════════════════════════════════════════════╗  
+    ║ Key            ║ Value                                                                                 ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "x_normalize"  ║ True/False - Normalizes the x-axis to instance base units if True                     ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "y_normalize"  ║ True/False - Normalizes the y-axis (TTS values) to a maximum of 1                     ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "title"        ║ String - Title of the Graph                                                           ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "x_label"      ║ String - Label for the x-axis                                                         ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "y_label"      ║ String - Label for the y-axis                                                         ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "x_lim"        ║ Tuple - Limits for the x-axis                                                         ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "y_lim"        ║ Tuple - Limits for the y-axis                                                         ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "fig_size"     ║ Tuple - Dimensions of the Graph (default is (7,7))                                    ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "dwave_colour" ║ String - Plotting parameter for D-Wave plt.plot. Example: "r--" for a red dotted line ║  
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣  
+    ║ "sa_colour"    ║ String - Plotting parameter for SA plt.plot. Example: "g+" for green "+"s             ║  
+    ╚════════════════╩═══════════════════════════════════════════════════════════════════════════════════════╝  
