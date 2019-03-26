@@ -186,6 +186,7 @@ y = [{(2, 6): 0.5160852615777896, (13, 13): 0.9319646681708734,
 (132, 140): 0.7338340760527127, (9, 137): 0.7862934888901292, (130, 132): 0.0,
 (8, 8): 0.16268264406083688, (130, 258): 0.0, (2, 130): 0.0, (10, 138): 0.0}]
     
-print(run_instances(instances = y, settings = {"dwave" : False, "sa" : True,
+print(run_instances(instances = y, settings = {"dwave" : True, "sa" : False,
     "dwave_params" : {"num_reads" : 100, "solver" : "DW_2000Q_VFYC_2_1"},
-    "sa_params" : {"-r" : 100, "-s" : 200}}, verbose=True))
+    "sa_params" : {"-r" : 100, "-s" : 200}}, verbose=True, 
+    plot_settings={"y_normalize":True, "x_normalize":True, "dwave_colour": "g--"}))
