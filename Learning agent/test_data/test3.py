@@ -9,7 +9,6 @@
 3. Run GAN to generate graphs and evaluate performance
 
 4. Repeat with alterations:
-    - Use smaller graphs as Dr. Sanders recommended
     - Create graphs with varying size (maybe up to 3x3)
     - Evaluate on D-Wave solver as well and try using raw inputs and
       maximal difference
@@ -19,7 +18,7 @@
 
 - Make sure the inputs are scaled properly
 - Remove scores from input to the generative algorithm
-- Add problem size labeing to chimera class
+- Add problem size labeling to chimera class
 """
 
 

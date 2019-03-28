@@ -3,6 +3,7 @@ import yaml
 
 from copy import deepcopy
 from itertools import combinations
+from os import path
 
 from .chimera_visualizer import draw_chimera
 from .path_finding import fully_connected
@@ -47,7 +48,8 @@ class Chimera:
 
     """
     def __init__(self):
-        with open('./vector_indices.yaml', 'r') as file:
+        filename = path.dirname(path.abspath(__file__)) + '/vector_indices.yaml'
+        with open(filename, 'r') as file:
             self.indices = yaml.load(file)
 
     def assign_biases(self, graph, sampler=np.random.random_sample):
@@ -222,6 +224,24 @@ class Chimera:
 
         return graph
 
+    @staticmethod
+    def find_n_nodes(graph):
+        """Determines the maximum numbered node in a given graph.
+
+        Parameters
+        ------------
+        graph: (dict) the D-Wave input or the output from self.create_graph().
+
+        Returns
+        ---------
+        (int) the maximum numbered graph.
+        """
+        nodes = set()
+        for (n1, n2) in graph.keys():
+            nodes.update({n1, n2})
+
+        return max(nodes)
+
     def find_shape(self, graph):
         """Determines the shape of the graph in terms of the number of
         chimera units.
@@ -265,6 +285,21 @@ class Chimera:
             vector[indx] = w
 
         return vector
+
+    @staticmethod
+    def size(graph):
+        """Determines the size of the problem.
+
+        Note that this doesn't subtract the nodes that extend out of the
+        unit cell. This means that the number returned is actually higher
+        than the actual size of the problem. This is a bug, not a
+        feature.
+        """
+        nodes = set()
+        for (n1, n2) in graph.keys():
+            nodes.update({n1, n2})
+
+        return len(nodes)
 
     def vector_to_graph(self, vector):
         """Formats the graph vector into the D-Wave input format.
