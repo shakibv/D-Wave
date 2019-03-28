@@ -158,7 +158,9 @@ def SA(directory, instance, solver="an_ms_r1_nf", solver_params={"-s":200,"-r":1
         
     # Print verbose output
     if verbose:
-        print("Simulated Annealing Solution:\n\nEnergies:\tCounts:\tSuccess Rate:\tInstance File:\n", stdout)
+        from re import search
+        print(stdout[:search("#work done in [0123456789]\.[0123456789]* s", stdout).end()], end="\n\n")
+        print("Simulated Annealing Solution:\n\nEnergies:\tCounts:\tSuccess Rate:\tInstance File:\n", stdout[search("#work done in [0123456789]\.[0123456789]* s", stdout).end():])
         if stderr != '':
             print("Error: ", stderr)
     
@@ -177,4 +179,5 @@ def SA(directory, instance, solver="an_ms_r1_nf", solver_params={"-s":200,"-r":1
     output = split("\r\n|\t| ", stdout)
     output = list(filter(None, output))
     
-    return float(output[0]), solver_params["-s"], output[2]
+    # Return lowest energy, successrate, work-time, repetition number
+    return float(output[output.index('#work')+5]), float(output[output.index('#work')+7]), float(output[output.index('#work')+3]), solver_params['-r']

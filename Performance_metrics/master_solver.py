@@ -1,4 +1,4 @@
-﻿def run_instances(instances, settings={'sa':True,'dwave':True,'dwave_params':{'num_reads':100},'sa_params':{}}, verbose=False):
+﻿def run_instances(instances, settings={'sa':True,'dwave':True,'dwave_params':{'num_reads':100},'sa_params':{}}, verbose=False, plot_settings=None):
     """
     Given an input problem instance(s), run_instances runs and returns the time to
     solution (TTS) statistics from the various solvers.
@@ -411,6 +411,40 @@
     solvers were used to evaluate the problem instance) which have lists of 
     TTS values associated with them. The TTS values are sorted in the same order
     as the instances were in the instances input parameter.
+    
+    
+    ========================
+    Plot Settings Parameter:
+    ========================
+    
+    run_instances accepts a parameter called plot_settings. This allows for the
+    results of the various solvers to be depicted graphically. Note that none of these
+    parameters are required. By default, plot_settings is set to None, thereby not
+    plotting the results. Currently, it supports the following key-value pairs:
+    
+    ╔════════════════╦═══════════════════════════════════════════════════════════════════════════════════════╗
+    ║ Key            ║ Value                                                                                 ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "x_normalize"  ║ True/False - Normalizes the x-axis to instance base units if True                     ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "y_normalize"  ║ True/False - Normalizes the y-axis (TTS values) to a maximum of 1                     ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "title"        ║ String - Title of the Graph                                                           ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "x_label"      ║ String - Label for the x-axis                                                         ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "y_label"      ║ String - Label for the y-axis                                                         ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "x_lim"        ║ Tuple - Limits for the x-axis                                                         ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "y_lim"        ║ Tuple - Limits for the y-axis                                                         ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "fig_size"     ║ Tuple - Dimensions of the Graph (default is (7,7))                                    ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "dwave_colour" ║ String - Plotting parameter for D-Wave plt.plot. Example: "r--" for a red dotted line ║
+    ╠════════════════╬═══════════════════════════════════════════════════════════════════════════════════════╣
+    ║ "sa_colour"    ║ String - Plotting parameter for SA plt.plot. Example: "g+" for green "+"s             ║
+    ╚════════════════╩═══════════════════════════════════════════════════════════════════════════════════════╝
         
     """
     # Import solvers
@@ -419,7 +453,7 @@
     from numpy import log
     
     # Initialize output
-    result = {"dwave":[], "sa":[]}
+    result = {}
     
     # Run (only) selected solvers
     
@@ -430,6 +464,10 @@
     for count, instance in enumerate(instances):
         # Run on D-Wave
         if settings['dwave']:
+            
+            # Initialize D-Wave results list
+            if "dwave" not in result.keys():
+                result["dwave"] = []
             
             # Set defaults
             if count == 0:
@@ -465,10 +503,14 @@
                 print("\n")
                 
             # Compute TTS    
-            result['dwave'].append(dwave['answer']['timing']['anneal_time_per_run']*log(0.01)/log(1-dwave["answer"]["num_occurrences"][0]/settings["dwave_params"]["num_reads"]))
+            result['dwave'].append(dwave['answer']['timing']['anneal_time_per_run']/1E6*log(0.01)/log(1-dwave["answer"]["num_occurrences"][0]/settings["dwave_params"]["num_reads"]))
                 
         # Run Simulated Annealing
         if settings["sa"]:
+            
+            # Initialize Simulated Annealing result list
+            if "sa" not in result.keys():
+                result["sa"] = []
             
             # Set defaults
             if count == 0:
@@ -480,6 +522,8 @@
                 settings['sa_params']["-s"] = 200
             if "-r" not in settings['sa_params'].keys():
                 settings['sa_params']["-r"] = 1000
+            if "-v" not in settings['sa_params'].keys():
+                settings['sa_params']["-v"] = True
                 
             # Remove "non-standard" parameters from settings and overwrite defaults
             if "solver" in settings['sa_params'].keys():
@@ -508,15 +552,82 @@
                     
             # Run simulated annealer
             if verbose:
-                sa = SA(dir_path, "temp_file.txt", verbose=True, solverDir=solver_path, solver=solver_sa, save=save)
+                sa = SA(dir_path, "temp_file.txt", verbose=True, solverDir=solver_path, solver=solver_sa, save=save, solver_params=settings["sa_params"])
 
             else:
-                sa = SA(dir_path, "temp_file.txt", verbose=False, solverDir=solver_path, solver=solver_sa, save=save)
+                sa = SA(dir_path, "temp_file.txt", verbose=False, solverDir=solver_path, solver=solver_sa, save=save, solver_params=settings["sa_params"])
                 
             # Delete instance data file
             remove(dir_path+"/temp_file.txt")
             
             # Compute TTS
-            result['sa'].append(float(sa[1])*log(0.01)/log(1-float(sa[2])))
+            result['sa'].append(sa[2]/sa[3]*log(0.01)/log(1-sa[1]))
+            print(result)
+            
+    if plot_settings != None:
+        
+        import matplotlib.pyplot as plt
+        
+        if "fig_size" not in plot_settings.keys():
+            plot_settings["fig_size"] = (7,7)
+        if "title" not in plot_settings.keys():
+            plot_settings["title"] = "'title' not set"
+        if "x_label" not in plot_settings.keys():
+            plot_settings["x_label"] = "'x_label' not set"
+        if "y_label" not in plot_settings.keys():
+            plot_settings["y_label"] = "'y_label' not set"
+        if settings["dwave"] and "dwave_colour" not in plot_settings.keys():
+            plot_settings["dwave_colour"] = "r-"
+        if settings["sa"] and "sa_colour" not in plot_settings.keys():
+            plot_settings["sa"] = "b-"
+        
+        
+        if plot_settings["y_normalize"]:
+            all_data = []
+            for key in result.keys():
+                all_data.extend(result[key])
+            data_max = max(all_data)
+            data_min = min(all_data)
+            for key in result.keys():
+                result[key] = (result[key]-data_min)/data_max
+            
+        if not plot_settings["x_normalize"]:
+            ns = []
+            base_size = 0
+            
+            if type(instances) == list:
+                for instance in instances:
+                    for key in instance.keys():
+                        if key[0] == key[1]:
+                            base_size += 1
+                    ns.append(base_size)
+                    
+            else:
+                for key in instances.keys():
+                    if key[0] == key[1]:
+                        base_size += 1
+                ns.append(base_size)
+                        
+        else:
+            if type(instances) == list:
+                ns = list(range(len(instances)))
+            else:
+                ns = [1]
+                
+        fig = plt.figure(figsize=plot_settings["fig_size"])
+        
+        if settings["dwave"]:
+            plt.plot(ns, result["dwave"], plot_settings["dwave_colour"])
+        if settings["sa"]:
+            plt.plot(ns, result["sa"], plot_settings["sa_colour"])
+            
+        plt.title(plot_settings["title"])
+        plt.xlabel(plot_settings["x_label"])
+        plt.ylabel(plot_settings["y_label"])
+        
+        if "x_lim" in plot_settings.keys():
+            plt.xlim(plot_settings["x_lim"])
+        if "y_lim" in plot_settings.keys():
+            plt.ylim(plot_settings["y_lim"])
             
     return result
