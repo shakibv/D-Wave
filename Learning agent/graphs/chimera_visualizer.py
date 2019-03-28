@@ -46,10 +46,11 @@ def draw_chimera(dwave):
 
     # Draw the graph
     fig = plt.figure()
-    ax = fig.add_subplot()
+    ax = fig.add_subplot(dpi=300)
     drawn_nodes = nx.draw(
         graph,
         pos=positions,
+        node_color='gray',
         with_labels=True,
     )
     drawn_edges = nx.draw_networkx_edges(
@@ -58,7 +59,7 @@ def draw_chimera(dwave):
         edgelist=edges.keys(),
         edge_color=list(edges.values()),
         width=3,
-        edge_cmap=get_cmap('seismic'),
+        edge_cmap=get_cmap('PuOr'),
         edge_vmin=-1,
         edge_vmax=1,
     )
