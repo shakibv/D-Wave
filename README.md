@@ -13,3 +13,5 @@ Performance metrics
 Ising oracle: Belief propagation algorithm, weighted MAX-2SAT solver or QUBO solver, time to target instead of time to solution, planted solution
 Optimal time to solution: ?
 Performance computer: ...   
+
+test_codes
