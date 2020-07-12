@@ -14,4 +14,5 @@ Ising oracle: Belief propagation algorithm, weighted MAX-2SAT solver or QUBO sol
 Optimal time to solution: ?
 Performance computer: ...   
 
-test_codes
+## test_codes
+## -------------
